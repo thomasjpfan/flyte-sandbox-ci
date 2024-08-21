@@ -12,5 +12,5 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: flyteorg/flyte
-      - run: ls flyte
+      - run: ls
 
