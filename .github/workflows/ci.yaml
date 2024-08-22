@@ -18,27 +18,22 @@ jobs:
 
       - name: Go Build Cache for Docker
         uses: actions/cache@v4
+        id: cache
         with:
-          path: go-build-cache
-          key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
-
-      - name: Go Mod Cache for Docker
-        uses: actions/cache@v4
-        with:
-          path: go-mod-cache
-          key: ${{ runner.os }}-go-mode-cache-${{ hashFiles('**/go.sum') }}
+          path: |
+            go-build-cache
+            go-mod-cache
+          key: ${{ runner.os }}-go-cache-${{ hashFiles('**/go.sum') }}
 
       - name: inject go-build-cache into docker
         uses: reproducible-containers/buildkit-cache-dance@v3.1.0
         with:
-          cache-source: go-build-cache
-          cache-target: /root/.cache/go-build
-
-      - name: inject go-mod-cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v3.1.0
-        with:
-          cache-source: go-mod-cache
-          cache-target: /root/go/pkg/mod
+          cache-map: |
+            {
+              "go-build-cache": "/root/.cache/go-build",
+              "go-mod-cache": "/root/go/pkg/mod"
+            }
+          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
 
       - name: Setup destination directories for image tarballs
         run: |
@@ -58,3 +53,9 @@ jobs:
           build-args: |
             FLYTECONSOLE_VERSION=latest
             FLYTE_VERSION=latest
+
+      - name: Upload single binary image
+        uses: actions/upload-artifact@v2
+        with:
+          name: single-binary-image
+          path: docker/sandbox-bundled/images/tar
