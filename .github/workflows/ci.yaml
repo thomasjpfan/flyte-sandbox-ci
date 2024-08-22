@@ -46,7 +46,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           file: Dockerfile
-          push: false
           platforms: linux/amd64
           tags: flyte-binary:sandbox
           outputs: type=docker,dest=docker/sandbox-bundled/images/tar/amd64/flyte-binary.tar
@@ -55,7 +54,35 @@ jobs:
             FLYTE_VERSION=latest
 
       - name: Upload single binary image
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: single-binary-image
           path: docker/sandbox-bundled/images/tar
+
+  sandbox-bundled-functional-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: [build-and-push-single-binary-image]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: flyteorg/flyte
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: single-binary-image
+          path: docker/sandbox-bundled/images/tar
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: image=moby/buildkit:master
+          buildkitd-flags: "--allow-insecure-entitlement security.insecure"
+
+      - name: Build sandbox image for functional tests
+        uses: docker/build-push-action@v5
+        with:
+          context: docker/sandbox-bundled
+          load: true
+          allow: "security.insecure"
+          tags: flyte-sandbox-bundled:local
