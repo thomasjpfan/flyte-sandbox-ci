@@ -12,5 +12,48 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: flyteorg/flyte
-      - run: ls
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Go Build Cache for Docker
+        uses: actions/cache@v4
+        with:
+          path: go-build-cache
+          key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
+
+      - name: Go Mod Cache for Docker
+        uses: actions/cache@v4
+        with:
+          path: go-mod-cache
+          key: ${{ runner.os }}-go-mode-cache-${{ hashFiles('**/go.sum') }}
+
+      - name: inject go-build-cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.0
+        with:
+          cache-source: go-build-cache
+          cache-target: /root/.cache/go-build
+
+      - name: inject go-mod-cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.0
+        with:
+          cache-source: go-mod-cache
+          cache-target: /root/go/pkg/mod
+
+      - name: Setup destination directories for image tarballs
+        run: |
+          mkdir -p docker/sandbox-bundled/images/tar/{arm64,amd64}
+
+      - name: Build and save
+        uses: docker/build-push-action@v5
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: Dockerfile
+          push: false
+          platforms: linux/amd64
+          tags: flyte-binary:sandbox
+          outputs: type=docker,dest=docker/sandbox-bundled/images/tar/amd64/flyte-binary.tar
+          build-args: |
+            FLYTECONSOLE_VERSION=latest
+            FLYTE_VERSION=${{ github.sha }}
