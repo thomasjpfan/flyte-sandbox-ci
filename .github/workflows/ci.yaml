@@ -56,4 +56,4 @@ jobs:
           outputs: type=docker,dest=docker/sandbox-bundled/images/tar/amd64/flyte-binary.tar
           build-args: |
             FLYTECONSOLE_VERSION=latest
-            FLYTE_VERSION=${{ github.sha }}
+            FLYTE_VERSION=latest
