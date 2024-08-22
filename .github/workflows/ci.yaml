@@ -166,6 +166,7 @@ jobs:
 
   functional-tests:
     runs-on: ubuntu-latest
+    needs: [build-single-binary-image, build-runtime-image]
     steps:
       - uses: actions/checkout@v4
       - name: Download union python sdk image
