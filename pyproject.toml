@@ -1,0 +1,7 @@
+[tool.uv]
+dev-dependencies = [
+    "union>=0.1.68",
+    "pytest>=8.3.2",
+]
+[tool.uv.workspace]
+members = []
