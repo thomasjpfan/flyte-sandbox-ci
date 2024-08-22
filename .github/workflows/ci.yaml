@@ -113,13 +113,13 @@ jobs:
           load: true
           allow: "security.insecure"
           tags: flyte-sandbox-bundled:local
-          outputs: type=docker,dest=flyte-sandbox.tar
+          outputs: type=docker,dest=flyte-sandbox-bundled.tar
 
       - name: Upload sandbox image
         uses: actions/upload-artifact@v4
         with:
-          name: flyte-sandbox
-          path: flyte-sandbox.tar
+          name: flyte-sandbox-bundled
+          path: flyte-sandbox-bundled.tar
 
   build-runtime-image:
     runs-on: ubuntu-latest
@@ -154,7 +154,7 @@ jobs:
           cache-to: type=gha,mode=max
           file: Dockerfile
           platforms: linux/amd64
-          tags: union-python-sdk:latest
+          tags: localhost:30000/union-python-sdk:latest
           outputs: type=docker,dest=union-python-sdk.tar
 
       - name: Upload union-python-sdk image
@@ -178,12 +178,29 @@ jobs:
       - name: Download flyte sandbox image
         uses: actions/download-artifact@v4
         with:
-          name: flyte-sandbox
-          path: flyte-sandbox.tar
+          name: flyte-sandbox-bundled
+          path: flyte-sandbox-bundled.tar
 
       - name: Load docker images
         run: |
-          docker image load union-python-sdk.tar
-          docker image load flyte-sandbox.tar
+          docker image load -i union-python-sdk.tar
+          docker image load -i flyte-sandbox-bundled.tar
 
+      - uses: unionai/flytectl-setup-action@v0.0.3
+      - name: Setup sandbox
+        run: |
+          mkdir -p ~/.flyte/sandbox
+          cat << EOF > ~/.flyte/sandbox/config.yaml
+          task_resources:
+            defaults:
+              cpu: 500m
+              memory: 500Mi
+            limits:
+              cpu: 2
+              memory: 4Gi
+          EOF
+          flytectl demo start --image flyte-sandbox-bundled:local --imagePullPolicy Never
 
+      - name: Upload runtime image for testing
+        run: |
+          docker image push localhost:30000/union-python-sdk:latest
