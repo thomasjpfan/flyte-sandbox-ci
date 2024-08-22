@@ -68,7 +68,7 @@ jobs:
         with:
           repository: flyteorg/flyte
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: single-binary-image
           path: docker/sandbox-bundled/images/tar
@@ -86,3 +86,8 @@ jobs:
           load: true
           allow: "security.insecure"
           tags: flyte-sandbox-bundled:local
+
+  # build-runtime-image:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
