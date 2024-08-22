@@ -42,7 +42,7 @@ jobs:
 
       - name: Setup destination directories for image tarballs
         run: |
-          mkdir -p docker/sandbox-bundled/images/tar/{arm64,amd64}
+          mkdir -p docker/sandbox-bundled/images/tar/amd64
 
       - name: Build and save
         uses: docker/build-push-action@v5
