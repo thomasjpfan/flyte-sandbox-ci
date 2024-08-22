@@ -62,7 +62,7 @@ jobs:
   sandbox-bundled-functional-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    needs: [build-and-push-single-binary-image]
+    needs: [build-single-binary-image]
     steps:
       - uses: actions/checkout@v4
         with:
