@@ -59,7 +59,8 @@ jobs:
           name: single-binary-image
           path: docker/sandbox-bundled/images/tar
 
-  sandbox-bundled-functional-tests:
+
+  build-sandbox-bundled:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: [build-single-binary-image]
@@ -101,12 +102,83 @@ jobs:
       - name: Build sandbox image for functional tests
         uses: docker/build-push-action@v5
         with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           context: docker/sandbox-bundled
+          platforms: linux/amd64
           load: true
           allow: "security.insecure"
           tags: flyte-sandbox-bundled:local
+          outputs: type=docker,dest=flyte-sandbox.tar
 
-  # build-runtime-image:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
+      - name: Upload sandbox image
+        uses: actions/upload-artifact@v4
+        with:
+          name: flyte-sandbox
+          path: flyte-sandbox.tar
+
+  build-runtime-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: UV Cache for Docker
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            uv-cache
+          key: ${{ runner.os }}-uv-cache-${{ hashFiles('Dockerfile') }}
+
+      - name: inject go-build-cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.0
+        with:
+          cache-map: |
+            {
+              "uv-cache": "/root/.cache/uv",
+            }
+          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+
+      - name: Build and save
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          file: Dockerfile
+          platforms: linux/amd64
+          tags: union-python-sdk:latest
+          outputs: type=docker,dest=union-python-sdk.tar
+
+      - name: Upload union-python-sdk image
+        uses: actions/upload-artifact@v4
+        with:
+          name: union-python-sdk
+          path: union-python-sdk.tar
+
+
+  functional-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download union python sdk image
+        uses: actions/download-artifact@v4
+        with:
+          name: union-python-sdk
+          path: union-python-sdk.tar
+
+      - name: Download flyte sandbox image
+        uses: actions/download-artifact@v4
+        with:
+          name: flyte-sandbox
+          path: flyte-sandbox.tar
+
+      - name: Load docker images
+        run: |
+          docker image load union-python-sdk.tar
+          docker image load flyte-sandbox.tar
+
+
