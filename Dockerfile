@@ -1,4 +1,5 @@
 #syntax=docker/dockerfile:1.9
+
 ARG PYTHON_VERSION="3.12"
 FROM ghcr.io/astral-sh/uv:0.3.1 AS uv
 FROM python:${PYTHON_VERSION}-slim-bookworm

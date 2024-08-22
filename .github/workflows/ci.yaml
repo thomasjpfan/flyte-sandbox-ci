@@ -118,7 +118,7 @@ jobs:
       - name: Upload sandbox image
         uses: actions/upload-artifact@v4
         with:
-          name: flyte-sandbox-bundled
+          name: tars-flyte-sandbox-bundled
           path: flyte-sandbox-bundled.tar
 
   build-runtime-image:
