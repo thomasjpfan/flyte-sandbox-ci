@@ -160,7 +160,7 @@ jobs:
       - name: Upload union-python-sdk image
         uses: actions/upload-artifact@v4
         with:
-          name: union-python-sdk
+          name: tars-union-python-sdk
           path: union-python-sdk.tar
 
 
@@ -173,12 +173,14 @@ jobs:
       - name: Download union python sdk image
         uses: actions/download-artifact@v4
         with:
-          name: union-python-sdk
-          path: union-python-sdk.tar
+          path: tars
+          pattern: tars-*
+          merge-multiple: true
 
       - name: Show files
         run: |
           ls
+          ls tars
 
       # - name: Download flyte sandbox image
       #   uses: actions/download-artifact@v4
@@ -188,7 +190,7 @@ jobs:
 
       - name: Load docker images
         run: |
-          docker image load -i union-python-sdk.tar
+          docker image load -i tars/union-python-sdk.tar
           # docker image load -i flyte-sandbox-bundled.tar
 
       # - uses: unionai/flytectl-setup-action@v0.0.3
