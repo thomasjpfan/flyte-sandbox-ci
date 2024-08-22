@@ -64,7 +64,7 @@ jobs:
           path: docker/sandbox-bundled/images/tar
 
 
-  build-sandbox-bundled:
+  build-sandbox-bundled-image:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: [build-single-binary-image]
@@ -166,7 +166,7 @@ jobs:
 
   functional-tests:
     runs-on: ubuntu-latest
-    needs: [build-single-binary-image, build-runtime-image]
+    needs: [build-sandbox-bundled-image, build-runtime-image]
     steps:
       - uses: actions/checkout@v4
       - name: Download union python sdk image
